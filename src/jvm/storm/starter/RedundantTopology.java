@@ -43,11 +43,11 @@ public class RedundantTopology {
       String[] genders = new String[]{ "Male", "Female" };
       String gender = genders[_rand.nextInt(genders.length)];
 
-      String[] ages = new String[]{ "10", "15", "20", "25", "30",
-                                    "35", "40", "45", "50", "55",
-                                    "60", "65", "70", "75", "80",
-                                    "85"};
-      String age = ages[_rand.nextInt(ages.length)];
+      Integer[] ages = new Integer[]{ 10, 15, 20, 25, 30,
+                                      35, 40, 45, 50, 55,
+                                      60, 65, 70, 75, 80,
+                                      85};
+      Integer age = ages[_rand.nextInt(ages.length)];
 
       _collector.emit(new Values(_id, gender, age));
       _id += 1;
@@ -68,44 +68,80 @@ public class RedundantTopology {
   }
 
   public static class MaleFilter extends BaseRichBolt {
+    OutputCollector _collector;
+
     @Override
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
+      _collector = collector;
     }
 
     @Override
     public void execute(Tuple tuple) {
+      if(tuple.getString(1).equals("Male")){
+        _collector.emit(tuple, new Values(tuple.getInteger(0), tuple.getString(1), tuple.getInteger(2)));
+        _collector.ack(tuple);
+      }
+    }
+
+    @Override
+    public void cleanup(){
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("id", "gender", "age"));
     }
   }
 
   public static class YouthFilter extends BaseRichBolt {
+    OutputCollector _collector;
+
     @Override
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
+      _collector = collector;
     }
 
     @Override
     public void execute(Tuple tuple) {
+      if(tuple.getInteger(2) <= 30){
+        _collector.emit(tuple, new Values(tuple.getInteger(0), tuple.getString(1), tuple.getInteger(2)));
+        _collector.ack(tuple);
+      }
+    }
+
+    @Override
+    public void cleanup(){
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("id", "gender", "age"));
     }
   }
 
   public static class ElderFilter extends BaseRichBolt {
+    OutputCollector _collector;
+
     @Override
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
+      _collector = collector;
     }
 
     @Override
     public void execute(Tuple tuple) {
+      if(tuple.getInteger(2) >= 65){
+        _collector.emit(tuple, new Values(tuple.getInteger(0), tuple.getString(1), tuple.getInteger(2)));
+        _collector.ack(tuple);
+      }
+    }
+
+    @Override
+    public void cleanup(){
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("id", "gender", "age"));
     }
   }
 
@@ -126,8 +162,8 @@ public class RedundantTopology {
     builder.setSpout("people", new ProfileGenerator(), 1);
     builder.setBolt("males1", new MaleFilter(), 1).shuffleGrouping("people");
     builder.setBolt("males2", new MaleFilter(), 1).shuffleGrouping("people");
-    builder.setBolt("youth-males", new YouthFilter(), 1).shuffleGrouping("male1");
-    builder.setBolt("elder-males", new ElderFilter(), 1).shuffleGrouping("male2");
+    builder.setBolt("youth-males", new YouthFilter(), 1).shuffleGrouping("males1");
+    builder.setBolt("elder-males", new ElderFilter(), 1).shuffleGrouping("males2");
     builder.setBolt("youth-males-printer", new Printer(), 1).shuffleGrouping("youth-males");
     builder.setBolt("elder-males-printer", new Printer(), 1).shuffleGrouping("elder-males");
 
