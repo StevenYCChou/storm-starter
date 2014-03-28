@@ -103,10 +103,12 @@ public class RedundantTopology {
     TopologyBuilder builder = new TopologyBuilder();
 
     builder.setSpout("people", new ProfileGenerator(), 1);
-    builder.setBolt("males1", new MaleFilterBolt(), 1).shuffleGrouping("people");
-    builder.setBolt("males2", new MaleFilterBolt(), 1).shuffleGrouping("people");
-    builder.setBolt("youth-males", new ExclamationBolt(), 1).shuffleGrouping("male1");
-    builder.setBolt("elder-males", new ExclamationBolt(), 1).shuffleGrouping("male2");
+    builder.setBolt("males1", new MaleFilter(), 1).shuffleGrouping("people");
+    builder.setBolt("males2", new MaleFilter(), 1).shuffleGrouping("people");
+    builder.setBolt("youth-males", new YouthFilter(), 1).shuffleGrouping("male1");
+    builder.setBolt("elder-males", new ElderFilter(), 1).shuffleGrouping("male2");
+    builder.setBolt("youth-males-printer", new Printer(), 1).shuffleGrouping("youth-males");
+    builder.setBolt("elder-males-printer", new Printer(), 1).shuffleGrouping("elder-males");
 
     Config conf = new Config();
     conf.setDebug(true);
