@@ -97,6 +97,7 @@ public class RedundantTopology {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
     }
+  }
 
   public static void main(String[] args) throws Exception {
     TopologyBuilder builder = new TopologyBuilder();
