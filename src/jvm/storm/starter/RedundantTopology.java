@@ -20,17 +20,37 @@ import backtype.storm.StormSubmitter;
 
 import backtype.storm.utils.Utils;
 import java.util.Map;
-
+import java.util.Random;
 
 public class RedundantTopology {
 
   public static class ProfileGenerator extends BaseRichSpout {
+    SpoutOutputCollector _collector;
+    Random _rand;
+    Integer _id;
+
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+      _collector = collector;
+      _rand = new Random();
+      _id = 0;
     }
 
     @Override
     public void nextTuple() {
+      Utils.sleep(50);
+
+      String[] genders = new String[]{ "Male", "Female" };
+      String gender = genders[_rand.nextInt(genders.length)];
+
+      String[] ages = new String[]{ "10", "15", "20", "25", "30",
+                                    "35", "40", "45", "50", "55",
+                                    "60", "65", "70", "75", "80",
+                                    "85"};
+      String age = ages[_rand.nextInt(ages.length)];
+
+      _collector.emit(new Values(_id, gender, age));
+      _id += 1;
     }
 
     @Override
@@ -43,6 +63,7 @@ public class RedundantTopology {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("id", "gender", "age"));
     }
   }
 
