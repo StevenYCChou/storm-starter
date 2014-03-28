@@ -88,9 +88,7 @@ public class RedundantTopology {
     }
   }
 
-
-
-  public static class PrinterBolt extends BaseBasicBolt {
+  public static class Printer extends BaseBasicBolt {
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
       System.out.println(tuple);
